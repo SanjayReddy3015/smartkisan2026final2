@@ -1,19 +1,16 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function run() {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "Say hello",
-    });
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent("Say hello");
     console.log("Success:", JSON.stringify(response));
-    console.log("Text:", response.text);
+    console.log("Text:", response.response.text());
   } catch (e) {
     console.error("Error:", e);
   }
 }
+run();
 run();

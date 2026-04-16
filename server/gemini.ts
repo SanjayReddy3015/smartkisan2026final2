@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-});
+export const ai = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY || process.env.AI_INTEGRATIONS_GEMINI_API_KEY || ""
+);
 
 const LANGUAGE_MAP: Record<string, string> = {
   en: "English",
@@ -19,8 +19,9 @@ const LANGUAGE_MAP: Record<string, string> = {
 };
 
 export async function askFarmingQuestion(message: string, language = "en"): Promise<string> {
-  const langName = LANGUAGE_MAP[language] || "English";
-  const prompt = `You are SmartKisan, an expert AI agricultural advisor for Indian farmers. 
+  try {
+    const langName = LANGUAGE_MAP[language] || "English";
+    const prompt = `You are SmartKisan, an expert AI agricultural advisor for Indian farmers. 
 You have deep knowledge of:
 - All Indian crops (Rabi, Kharif, Zaid) and their cultivation practices
 - Indian Mandi market prices and government schemes (PM-KISAN, NABARD, MSP)
@@ -33,16 +34,18 @@ If asked in a different language, still reply in ${langName}.
 
 Farmer's question: ${message}`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { maxOutputTokens: 8192 },
-  });
-  return response.text || "I could not process your request. Please try again.";
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent(prompt);
+    return response.response.text();
+  } catch (err: any) {
+    console.error("Gemini API Error in askFarmingQuestion:", err);
+    return "I am having trouble connecting right now (Quota Exceeded or Invalid API Key). Please verify your GEMINI_API_KEY.";
+  }
 }
 
 export async function getIrrigationAdvice(cropType: string, soilType: string, temperature: number): Promise<{ recommendation: string; waterLitersPerAcre: number }> {
-  const prompt = `You are an Indian agricultural irrigation expert.
+  try {
+    const prompt = `You are an Indian agricultural irrigation expert.
 Crop: ${cropType}, Soil: ${soilType}, Temperature: ${temperature}°C
 
 Give a concise irrigation recommendation for this Indian crop including:
@@ -54,22 +57,21 @@ Give a concise irrigation recommendation for this Indian crop including:
 Also estimate total water requirement in liters per acre per week.
 Reply in JSON format: { "recommendation": "...", "waterLitersPerAcre": <number> }`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { maxOutputTokens: 8192 },
-  });
-
-  try {
-    const text = response.text || "";
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent(prompt);
+    const text = response.response.text();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]);
-  } catch { }
-  return { recommendation: response.text || "Apply water every 3-4 days, check soil moisture before irrigating.", waterLitersPerAcre: 45000 };
+    return { recommendation: text, waterLitersPerAcre: 45000 };
+  } catch (err) {
+    console.error("Irrigation AI error:", err);
+    return { recommendation: "Apply water every 3-4 days (API key exhausted).", waterLitersPerAcre: 45000 };
+  }
 }
 
 export async function getFertilizerAdvice(cropType: string, soilType: string, stage: string): Promise<{ recommendation: string }> {
-  const prompt = `You are an Indian fertilizer and soil nutrition expert.
+  try {
+    const prompt = `You are an Indian fertilizer and soil nutrition expert.
 Crop: ${cropType}, Soil Type: ${soilType}, Growth Stage: ${stage}
 
 Provide a detailed fertilizer recommendation including:
@@ -81,16 +83,18 @@ Provide a detailed fertilizer recommendation including:
 
 Be specific to Indian market availability and farmer budget.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { maxOutputTokens: 8192 },
-  });
-  return { recommendation: response.text || "Apply NPK 10-26-26 at sowing, top dress with Urea after 30 days." };
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent(prompt);
+    return { recommendation: response.response.text() };
+  } catch (err) {
+    console.error("Fertilizer AI error:", err);
+    return { recommendation: "Apply NPK 10-26-26 at sowing. (API limit reached)" };
+  }
 }
 
 export async function getTransportEstimate(from: string, to: string, cropType: string, quantity: number): Promise<{ cost: number; distance: string; tips: string }> {
-  const prompt = `You are an Indian rural logistics expert with knowledge of truck rental rates across India.
+  try {
+    const prompt = `You are an Indian rural logistics expert with knowledge of truck rental rates across India.
 From: ${from}, To: ${to} (both in India)
 Crop: ${cropType}, Quantity: ${quantity} quintals
 
@@ -102,22 +106,20 @@ Estimate:
 
 Reply in JSON: { "cost": <number in rupees>, "distance": "<km range>", "tips": "..." }`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { maxOutputTokens: 8192 },
-  });
-
-  try {
-    const text = response.text || "";
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent(prompt);
+    const text = response.response.text();
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]);
-  } catch { }
-  return { cost: Math.round(quantity * 15), distance: "50-100 km", tips: "Book trucks through local FPO to get group discount." };
+    return { cost: quantity * 15, distance: "100 km", tips: "Use localized transport." };
+  } catch (err) {
+    return { cost: Math.round(quantity * 15), distance: "50-100 km", tips: "Book trucks through local FPO. (API limit)" };
+  }
 }
 
 export async function getCropWeatherAlert(crop: string, weatherData: any): Promise<string> {
-  const prompt = `You are an Indian crop weather advisory expert.
+  try {
+    const prompt = `You are an Indian crop weather advisory expert.
 Crop being grown: ${crop}
 Current weather: Temperature ${weatherData.temp}°C, Humidity ${weatherData.humidity}%, Condition: ${weatherData.condition}
 
@@ -129,10 +131,10 @@ Based on this weather, give:
 
 Keep it brief and actionable for Indian farmers.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { maxOutputTokens: 8192 },
-  });
-  return response.text || "Monitor your crops regularly and ensure proper drainage.";
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const response = await model.generateContent(prompt);
+    return response.response.text();
+  } catch (err) {
+    return "Monitor your crops regularly and ensure proper drainage (API limit reached).";
+  }
 }
