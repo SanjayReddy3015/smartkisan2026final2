@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Force hide replit logo/badge if it is injected by the platform */
+.replit-badge, #replit-badge, [data-cy="replit-badge"], div[class*="replit"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', sans-serif;
+    --font-serif: 'Libre Baskerville', serif;
+
+    /* Earthy Green/Brown Palette */
+    --background: 40 33% 96%;
+    --foreground: 24 10% 15%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 15%;
+    
+    /* Deep Forest Green */
+    --primary: 124 33% 27%;
+    --primary-foreground: 40 33% 96%;
+    
+    /* Earthy Muted Green */
+    --secondary: 100 20% 88%;
+    --secondary-foreground: 124 33% 27%;
+    
+    /* Warm Soil Brown */
+    --muted: 30 20% 92%;
+    --muted-foreground: 25 15% 45%;
+    
+    /* Sunset Orange/Terracotta */
+    --accent: 24 67% 53%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 30 20% 85%;
+    --input: 30 20% 85%;
+    --ring: 124 33% 27%;
+    
+    --radius: 0.75rem;
+
+    --sidebar-background: 40 33% 94%;
+    --sidebar-foreground: 24 10% 15%;
+    --sidebar-primary: 124 33% 27%;
+    --sidebar-primary-foreground: 40 33% 96%;
+    --sidebar-accent: 100 20% 88%;
+    --sidebar-accent-foreground: 124 33% 27%;
+    --sidebar-border: 30 20% 85%;
+    --sidebar-ring: 124 33% 27%;
+
+    --chart-1: 124 33% 27%;
+    --chart-2: 24 67% 53%;
+    --chart-3: 100 20% 60%;
+    --chart-4: 40 80% 60%;
+    --chart-5: 20 40% 40%;
+  }
+
+  .dark {
+    --background: 24 10% 12%;
+    --foreground: 40 33% 94%;
+    
+    --card: 24 10% 15%;
+    --card-foreground: 40 33% 94%;
+    
+    --popover: 24 10% 15%;
+    --popover-foreground: 40 33% 94%;
+    
+    --primary: 124 30% 45%;
+    --primary-foreground: 24 10% 12%;
+    
+    --secondary: 100 15% 25%;
+    --secondary-foreground: 40 33% 94%;
+    
+    --muted: 24 10% 20%;
+    --muted-foreground: 30 15% 65%;
+    
+    --accent: 24 60% 45%;
+    --accent-foreground: 40 33% 94%;
+    
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 24 10% 25%;
+    --input: 24 10% 25%;
+    --ring: 124 30% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    @apply font-bold tracking-tight text-primary;
+  }
+}
+
+/* Custom utility for subtle elevations */
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg shadow-black/5 dark:bg-black/50 dark:border-white/10;
+  }
+  .hover-elevate {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10;
+  }
+}
